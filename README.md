@@ -110,9 +110,12 @@ python train_model_face.py
 - Ghi lại các video gập bụng từ 2 góc chính là góc 45 độ và góc ngang  
 - Độ phân giải tối thiểu **720p**, tốc độ khung hình **30 FPS**.  
 - Mỗi video có thể kéo dài **15-60 giây**.  
-- Góc ngang: ![image](https://github.com/user-attachments/assets/515fe7ab-f236-494f-bfea-17c7f2130e5f)
-- Góc 45%: ![image](https://github.com/user-attachments/assets/8281e8f0-6762-4425-a10e-ac1cea4146c5)
- 
+
+<div style="display: flex; justify-content: center; gap: 10px;">
+  <img src="https://github.com/user-attachments/assets/515fe7ab-f236-494f-bfea-17c7f2130e5f" alt="Góc ngang" width="300"/>
+  <img src="https://github.com/user-attachments/assets/8281e8f0-6762-4425-a10e-ac1cea4146c5" alt="Góc 45 độ" width="300"/>
+</div>
+
 #### **5.2. Lưu video vào thư mục dataset**  
 - Tạo thư mục **`dataset/videos`**.  
 - Lưu các video vào thư mục này.  
