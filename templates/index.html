@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sit-Up Recognition</title>
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      integrity="sha512-..."
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      integrity="sha384-..."
+      crossorigin="anonymous"
+    />
+    <style>
+      /* Dark minimalistic theme */
+      body {
+        font-family: 'Arial', sans-serif;
+        background-color: #111;
+        color: #eee;
+        margin: 0;
+        padding: 20px;
+      }
+      .container-custom {
+        background: #222;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(255,255,255,0.1);
+      }
+      .camera {
+        background-color: #000;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 20px;
+      }
+      .camera img {
+        width: 100%;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .header i {
+        font-size: 40px;
+        color: #007bff;
+      }
+      .header h1 {
+        font-size: 36px;
+        margin: 10px 0;
+        letter-spacing: 3px;
+      }
+      .info p {
+        margin: 5px 0;
+      }
+      /* Hide workout info until workout starts */
+      #workout-info {
+        display: none;
+      }
+      .buttons button {
+        margin-bottom: 10px;
+      }
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #007bff;
+        color: #fff;
+        padding: 15px 25px;
+        border-radius: 5px;
+        font-size: 1.5rem;
+        display: none;
+      }
+      /* Modal styles for History */
+      .modal-content {
+        background-color: #222;
+        color: #eee;
+      }
+      .close {
+        float: right;
+        font-size: 28px;
+        cursor: pointer;
+      }
+      .history-section {
+        margin-top: 20px;
+      }
+    </style>
+    <script>
+      let faceRecognitionInterval;
+      function showNotification(message) {
+        const notif = document.getElementById("notification");
+        notif.innerText = message;
+        notif.style.display = "block";
+        setTimeout(() => { notif.style.display = "none"; }, 3000);
+      }
+      function updateStatus() {
+        fetch("/status")
+          .then(res => res.json())
+          .then(data => {
+            // Update User with icon
+            document.getElementById("user").innerHTML = '<i class="fas fa-user"></i> User: ' + data.user;
+            // Update Status with text only (no icon)
+            document.getElementById("status").innerText = "Status: " + data.status;
+            if (document.getElementById("workout-info").style.display !== "none") {
+              document.getElementById("situp_count").innerHTML = '<i class="fas fa-dumbbell"></i> Sit-ups: ' + data.situp_count;
+              document.getElementById("result").innerHTML = '<i class="fas fa-times-circle"></i> Result: ' + data.result;
+              document.getElementById("pose").innerHTML = '<i class="fas fa-hourglass"></i> Pose: ' + data.pose;
+              document.getElementById("instruction").innerHTML = '<i class="fas fa-info-circle"></i> Instruction: ' + data.instruction;
+              document.getElementById("cooldown").innerHTML = '<i class="fas fa-clock"></i> Cooldown: ' + data.cooldown;
+              if (data.situp_count >= 12) {
+                document.getElementById("continue-button").style.display = "block";
+              }
+            }
+          });
+      }
+      setInterval(updateStatus, 1000);
+      
+      function confirmUser() {
+        fetch("/confirm", { method: "POST" })
+          .then(res => res.json())
+          .then(data => {
+            showNotification(data.message);
+            document.getElementById("confirm-button").style.display = "none";
+            document.getElementById("start-button").style.display = "block";
+            clearInterval(faceRecognitionInterval);
+          });
+      }
+      
+      function startWorkout() {
+        fetch("/start_counting", { method: "POST" })
+          .then(res => res.json())
+          .then(data => {
+            showNotification(data.message);
+            document.getElementById("start-button").style.display = "none";
+            document.getElementById("workout-info").style.display = "block";
+            document.getElementById("other-buttons").style.display = "block";
+            document.getElementById("continue-button").style.display = "none";  // Hide continue button at start
+          });
+      }
+      
+      function continueSet() {
+        fetch("/continue_set", { method: "POST" })
+          .then(res => res.json())
+          .then(data => {
+            showNotification(data.message);
+            document.getElementById("continue-button").style.display = "none";  // Hide continue button after clicking
+          });
+      }
+      
+      function pauseCounting() {
+        fetch("/pause", { method: "POST" })
+          .then(res => res.json())
+          .then(data => showNotification(data.message));
+      }
+      function resumeCounting() {
+        fetch("/resume", { method: "POST" })
+          .then(res => res.json())
+          .then(data => showNotification(data.message));
+      }
+      function logoutUser() {
+        fetch("/logout", { method: "POST" })
+          .then(res => res.json())
+          .then(data => {
+            showNotification(data.message);
+            document.getElementById("user").innerHTML = '<i class="fas fa-user"></i> User: Unknown';
+            document.getElementById("status").innerText = "Status: Waiting for Confirmation";
+            document.getElementById("workout-info").style.display = "none";
+            document.getElementById("other-buttons").style.display = "none";
+            document.getElementById("confirm-button").style.display = "block";
+            $("#history-modal").modal("hide");
+          });
+      }
+      function saveData() {
+        fetch("/save", { method: "POST" })
+          .then(res => res.json())
+          .then(data => {
+            showNotification(data.message);
+            setTimeout(() => { showHistory(); }, 500);
+          });
+      }
+      function showHistory() {
+        if (document.getElementById("user").innerText.indexOf("Unknown") !== -1) {
+          showNotification("Please confirm user first.");
+          return;
+        }
+        fetch("/user_history")
+          .then(res => res.json())
+          .then(data => {
+            if (data.user_name === "No Confirmed User") {
+              showNotification("No history available for unconfirmed user.");
+              return;
+            }
+            let content = `<h2 class="mb-3"><i class="fas fa-history"></i> ${data.user_name}'s Sit-Up History</h2>
+              <table class="table table-dark">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Sit-ups</th>
+                    <th>Result</th>
+                  </tr>
+                </thead>
+                <tbody>`;
+            data.history.forEach(entry => {
+              content += `<tr>
+                <td>${entry.session_time}</td>
+                <td>${entry.situp_count}</td>
+                <td>${entry.result == 1 ? "Pass" : "Fail"}</td>
+              </tr>`;
+            });
+            content += `</tbody></table>`;
+            document.getElementById("user-history-content").innerHTML = content;
+            $("#history-modal").modal("show");
+          });
+      }
+      function startFaceRecognition() {
+        faceRecognitionInterval = setInterval(() => {
+          fetch("/recognize_face")
+            .then(res => res.json())
+            .then(data => {
+              document.getElementById("user").innerHTML = '<i class="fas fa-user"></i> User: ' + data.user;
+            });
+        }, 2000);
+      }
+      window.onload = startFaceRecognition;
+    </script>
+  </head>
+  <body>
+    <div class="container container-custom">
+      <div class="row">
+        <!-- Camera Column -->
+        <div class="col-md-8">
+          <div class="camera">
+            <img src="{{ url_for('video_feed') }}" alt="Camera Feed" />
+          </div>
+        </div>
+        <!-- Info Column -->
+        <div class="col-md-4">
+          <div class="header">
+            <i class="fas fa-dumbbell"></i>
+            <h1>Sit-Up Recognition</h1>
+          </div>
+          <p id="user"><i class="fas fa-user"></i> User: Unknown</p>
+          <p id="status">Status: Waiting for Confirmation</p>
+          <!-- Workout info shown only after Start Workout -->
+          <div id="workout-info">
+            <p id="situp_count"><i class="fas fa-dumbbell"></i> Sit-ups: 0</p>
+            <p id="result"><i class="fas fa-times-circle"></i> Result: Fail</p>
+            <p id="pose"><i class="fas fa-hourglass"></i> Pose: Waiting...</p>
+            <p id="instruction"><i class="fas fa-info-circle"></i> Instruction: Please show full body and lie horizontally</p>
+            <p id="cooldown"><i class="fas fa-clock"></i> Cooldown:</p>
+          </div>
+          <div class="buttons">
+            <button id="confirm-button" class="btn btn-primary btn-block" onclick="confirmUser()">
+              <i class="fas fa-user-check"></i> Confirm User
+            </button>
+            <button id="start-button" class="btn btn-success btn-block" onclick="startWorkout()" style="display: none;">
+              <i class="fas fa-play"></i> Start Workout
+            </button>
+            <button id="continue-button" class="btn btn-warning btn-block" onclick="continueSet()" style="display: none;">
+              <i class="fas fa-redo"></i> Continue Set
+            </button>
+            <div id="other-buttons" style="display: none;">
+              <button class="btn btn-info btn-block" onclick="saveData()">
+                <i class="fas fa-save"></i> Save Result
+              </button>
+              <button class="btn btn-danger btn-block" onclick="logoutUser()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </button>
+              <button id="pause-resume-button" class="btn btn-secondary btn-block" onclick="togglePauseResume()">
+                <i class="fas fa-pause"></i> Pause
+              </button>
+              <button class="btn btn-dark btn-block" onclick="showHistory()">
+                <i class="fas fa-history"></i> View History
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="modal fade" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-history"></i> User History</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModal()">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" id="user-history-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
+    <script>
+      function togglePauseResume() {
+        const button = document.getElementById("pause-resume-button");
+        if (button.innerText.includes("Pause")) {
+          pauseCounting();
+          button.innerHTML = '<i class="fas fa-play"></i> Resume';
+        } else {
+          resumeCounting();
+          button.innerHTML = '<i class="fas fa-pause"></i> Pause';
+        }
+      }
+    </script>
+  </body>
+</html>
