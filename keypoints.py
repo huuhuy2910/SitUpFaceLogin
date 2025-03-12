@@ -15,10 +15,12 @@ data = []
 labels = []
 
 def extract_keypoints(image):
-    """ Trích xuất keypoints từ ảnh bằng Mediapipe Pose """
+    """ Trích xuất keypoints từ ảnh bằng Mediapipe Pose và chuẩn hóa tọa độ """
     results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
     if results.pose_landmarks:
         keypoints = np.array([[lm.x, lm.y] for lm in results.pose_landmarks.landmark]).flatten()
+        # Chuẩn hóa tọa độ
+        keypoints = (keypoints - np.mean(keypoints)) / np.std(keypoints)
         return keypoints
     return None
 
@@ -45,7 +47,7 @@ data = np.array(data)
 labels = np.array(labels)
 
 # Lưu dataset
-np.save("keypoint/keypoints_data.npy", data)
-np.save("keypoint/keypoints_labels.npy", labels)
+np.save("keypoints/keypoints_data.npy", data)
+np.save("keypoints/keypoints_labels.npy", labels)
 
 print(f"Dataset đã lưu: {data.shape}, Labels: {labels.shape}")

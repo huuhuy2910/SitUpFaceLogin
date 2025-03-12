@@ -244,7 +244,7 @@ def gen_frames():
             break
         frame = cv2.flip(frame, 1)
         if not start_counting_flag:
-            if frame_count % 30 == 0:
+            if frame_count % 10 == 0:  # Reduce interval to every 10 frames
                 recognize_face(frame)
             if recognized_face is not None:
                 top, right, bottom, left = recognized_face["box"]
@@ -256,7 +256,7 @@ def gen_frames():
                 if not (check_full_body(keypoints) and is_body_horizontal(keypoints)):
                     pose_instruction = "Please lie down and show your full body."
                     display_state = "Waiting..."
-                    if time.time() - last_instruction_time > 5:
+                    if time.time() - last_instruction_time > 2:  # Reduce interval to every 2 seconds
                         async_speak("Please lie down and show your full body.")
                         last_instruction_time = time.time()
                 else:
