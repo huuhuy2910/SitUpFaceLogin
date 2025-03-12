@@ -10,6 +10,7 @@ Tài liệu này hướng dẫn chi tiết cách **cài đặt** và **chạy** 
 ## **Yêu cầu hệ thống**  
 - **Python** 3.7 trở lên  
 - **MySQL Server**  
+- **OpenCV, MediaPipe, TensorFlow**  
 - Các thư viện Python cần thiết (**liệt kê trong `requirements.txt`**)  
 
 ---
@@ -93,7 +94,20 @@ python train_model_face.py
 
 ---
 
-### **5. Trích xuất Keypoints từ video**  
+### **5. Chuẩn bị video làm dataset**  
+#### **5.1. Thu thập video gập bụng**  
+- Ghi lại các video gập bụng từ nhiều góc độ khác nhau.  
+- Độ phân giải tối thiểu **720p**, tốc độ khung hình **30 FPS**.  
+- Mỗi video có thể kéo dài **15-60 giây**.  
+
+#### **5.2. Lưu video vào thư mục dataset**  
+- Tạo thư mục **`dataset/videos`**.  
+- Lưu các video vào thư mục này.  
+- Định dạng video khuyến nghị: `.mp4` hoặc `.avi`.  
+
+---
+
+### **6. Trích xuất Keypoints từ video**  
 Chạy script **`frame.py`** để trích xuất keypoints từ video tập luyện:  
 ```sh
 python frame.py
@@ -102,7 +116,7 @@ python frame.py
 
 ---
 
-### **6. Chuẩn bị dữ liệu keypoints**  
+### **7. Chuẩn bị dữ liệu keypoints**  
 Chạy script **`keypoints.py`** để xử lý dữ liệu keypoints trước khi đưa vào mô hình LSTM:  
 ```sh
 python keypoints.py
@@ -111,7 +125,7 @@ python keypoints.py
 
 ---
 
-### **7. Huấn luyện mô hình LSTM**  
+### **8. Huấn luyện mô hình LSTM**  
 Mở và chạy notebook **`train_lstm.ipynb`** để huấn luyện mô hình LSTM nhận diện số lần gập bụng.  
 Sau khi huấn luyện, mô hình sẽ được lưu dưới dạng:  
 ```
@@ -120,7 +134,7 @@ Model_situp_lstm.h5
 
 ---
 
-### **8. Chạy ứng dụng**  
+### **9. Chạy ứng dụng**  
 Chạy Flask API để khởi động hệ thống:  
 ```sh
 python app.py

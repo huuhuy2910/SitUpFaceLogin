@@ -1,0 +1,12 @@
+opencv-python
+face_recognition
+numpy
+tensorflow
+mediapipe
+flask
+mysql-connector-python
+pyttsx3
+logging
+seaborn
+matplotlib
+scikit-learn
