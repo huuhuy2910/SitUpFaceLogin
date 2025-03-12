@@ -1,4 +1,5 @@
-# **SitUpFaceLogin**  
+# **Ứng dụng xác thực khuôn mặt và LSTM trong nhận diện & đếm động tác gập bụng từ video - 
+SitUpFaceLogin**  
 
 ## **Giới thiệu**  
 **SitUpFaceLogin** là một dự án sử dụng **nhận diện khuôn mặt** và **nhận diện tư thế** để **đếm số lần gập bụng**. Hệ thống sẽ xác thực người dùng bằng khuôn mặt trước khi theo dõi số lần tập luyện và lưu trữ kết quả vào **MySQL**.  
