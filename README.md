@@ -186,7 +186,6 @@ http://localhost:5000
 | `/resume`                | POST       | Tiếp tục đếm sau khi tạm dừng |
 | `/logout`                | POST       | Đăng xuất người dùng |
 | `/user_history`          | GET        | Xem lịch sử tập luyện của người dùng |
-| `/collect_face_data`     | POST       | Thu thập dữ liệu khuôn mặt |
 
 ---
 
