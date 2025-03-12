@@ -8,6 +8,7 @@ import collections
 import threading
 import time
 import winsound  # For beep sound
+import pyttsx3   # Thư viện chuyển văn bản thành giọng nói
 from flask import Flask, render_template, Response, jsonify, request
 import mysql.connector
 from mysql.connector import Error
@@ -19,6 +20,20 @@ DB_CONFIG = {
     "password": "1234",
     "database": "fitness_tracking"
 }
+
+def speak(text):
+    """
+    Phát giọng nói cho văn bản truyền vào.
+    Mỗi lần gọi sẽ tạo một instance mới của pyttsx3 để tránh lỗi 'run loop already started'.
+    """
+    local_engine = pyttsx3.init()
+    local_engine.say(text)
+    local_engine.runAndWait()
+    local_engine.stop()
+
+def async_speak(text):
+    """Gọi hàm speak() trong một luồng riêng để không chặn các hoạt động khác."""
+    threading.Thread(target=speak, args=(text,), daemon=True).start()
 
 # --------------------------
 # Face Recognition Setup
@@ -55,7 +70,7 @@ ready_to_count = False   # Được set True sau khi cooldown hoàn tất
 display_state = "Waiting..."  # "Lying Down", "Sit-Up", hoặc "Success! Completed 1 set"
 
 # Các thông báo bổ sung hiển thị trên giao diện
-pose_instruction = ""     # Ví dụ: "Please show full body and lie horizontally"
+pose_instruction = ""     # Ví dụ: "Please lie down and show your full body."
 cooldown_message = ""     # Ví dụ: "Cooldown: 5s" hoặc "Cooldown Done"
 
 cooldown_duration = 10    # Cooldown 10 giây
@@ -65,6 +80,13 @@ cooldown_start_time = None
 # Flags
 start_counting_flag = False  # Được đặt True sau khi nhấn Start
 paused_flag = False
+
+# Flags cho giọng nói (để tránh lặp nhiều lần)
+voice_position_announced = False
+set_completed_announced = False
+
+# Biến toàn cục theo dõi thời gian thông báo cuối
+last_instruction_time = 0
 
 # --------------------------
 # Utility Functions
@@ -98,13 +120,8 @@ def is_body_horizontal(keypoints):
 def predict_action(keypoints):
     """
     Chạy model dự đoán động tác và cập nhật số lần gập bụng.
-    Nếu đã đạt 12 lần, không cập nhật thêm và cập nhật display_state thành Success.
     """
     global previous_state, situp_count, down_position, display_state
-    if situp_count >= 12:
-        display_state = "Success! Completed 1 set"
-        return
-
     keypoints = keypoints.reshape(1, 1, -1)
     prediction = model.predict(keypoints)[0][0]
     predictions_queue.append(prediction)
@@ -139,6 +156,7 @@ def countdown_timer():
             winsound.Beep(1000, 500)
             ready_to_count = True
             cooldown_message = "Cooldown Done"
+            async_speak("Start counting!")
             break
         winsound.Beep(1000, 500)
         time.sleep(1)
@@ -194,12 +212,15 @@ def recognize_face(frame):
 
 def gen_frames():
     """
-    Đọc frame từ webcam, chạy nhận diện khuôn mặt nếu chưa xác nhận.
+    Đọc frame từ webcam.
+    Nếu chưa xác nhận người dùng, thực hiện nhận diện khuôn mặt.
     Sau khi nhấn Confirm & Start, nếu nhận diện được toàn bộ cơ thể
-    (check_full_body và is_body_horizontal) thì khởi động cooldown và gọi predict_action để đếm số gập.
-    Nếu số gập đạt 12, không tiếp tục đếm (vẫn giữ stream).
+    (check_full_body và is_body_horizontal) thì:
+      - Nếu cơ thể chưa đúng vị trí, phát lời nhắc "Please lie down and show your full body." mỗi 5 giây.
+      - Nếu đúng vị trí và cooldown hoàn tất, gọi predict_action để cập nhật số gập.
+    Khi số gập đạt 12, phát lời chúc mừng hoàn thành set và dừng đếm.
     """
-    global situp_count, start_counting_flag, recognized_face, cooldown_started, cooldown_start_time, ready_to_count, display_state, pose_instruction, cooldown_message
+    global situp_count, start_counting_flag, recognized_face, cooldown_started, cooldown_start_time, ready_to_count, display_state, pose_instruction, cooldown_message, voice_position_announced, last_instruction_time, set_completed_announced
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Error: Could not open video device")
@@ -217,25 +238,34 @@ def gen_frames():
         if start_counting_flag:
             landmarks, keypoints = extract_keypoints(frame)
             if keypoints is not None:
+                # Nếu cơ thể không đúng vị trí (không đủ keypoints hoặc không nằm ngang)
                 if not (check_full_body(keypoints) and is_body_horizontal(keypoints)):
-                    pose_instruction = "Please show full body and lie horizontally"
+                    pose_instruction = "Please lie down and show your full body."
+                    display_state = "Waiting..."
+                    if time.time() - last_instruction_time > 5:
+                        async_speak("Please lie down and show your full body.")
+                        last_instruction_time = time.time()
                 else:
                     pose_instruction = ""
+                    last_instruction_time = 0  # Reset nếu vị trí đúng
                     if not cooldown_started and not ready_to_count:
                         cooldown_started = True
                         cooldown_start_time = time.time()
                         threading.Thread(target=countdown_timer, daemon=True).start()
-                if ready_to_count and situp_count < 12 and check_full_body(keypoints):
+                if ready_to_count and check_full_body(keypoints):
                     threading.Thread(target=predict_action, args=(keypoints,), daemon=True).start()
-                if situp_count >= 12:
+                # Kiểm tra nếu số gập đạt 12, phát lời chúc mừng (nếu chưa phát)
+                if situp_count >= 12 and not set_completed_announced:
+                    async_speak("Congratulations! You have completed one set.")
+                    set_completed_announced = True
+                    start_counting_flag = False
                     display_state = "Success! Completed 1 set"
-                    start_counting_flag = False  # Stop counting after completing the set
             if landmarks is not None:
                 mp_drawing.draw_landmarks(frame, landmarks, mp_pose.POSE_CONNECTIONS,
                                           mp_drawing.DrawingSpec(color=(0,255,0), thickness=2, circle_radius=3),
                                           mp_drawing.DrawingSpec(color=(0,0,255), thickness=2, circle_radius=3))
         else:
-            cv2.putText(frame, "Please confirm user first.", (50,100),
+            cv2.putText(frame, "Please confirm user first.", (50, 100),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,255), 2, cv2.LINE_AA)
         ret, buffer = cv2.imencode('.jpg', frame)
         if not ret:
@@ -258,23 +288,23 @@ def video_feed():
 # --- Endpoints ---
 @app.route('/confirm', methods=['POST'])
 def confirm():
-    """
-    Khi nhấn Confirm: nếu khuôn mặt nhận diện được hợp lệ (khác "Unknown"),
-    lưu lại tên đã xác nhận vào confirmed_user_name và thông báo cho người dùng.
-    Không đặt start_counting_flag ở đây.
-    """
     global current_user_name, recognized_face, confirmed_user_name
     if recognized_face is not None and recognized_face["name"].lower() != "unknown":
         current_user_name = recognized_face["name"]
         confirmed_user_name = current_user_name
+        async_speak(f"Face recognized, welcome {current_user_name}!")
         return jsonify({"message": f"User confirmed as {current_user_name}. Now click Start to begin the workout."})
     else:
         return jsonify({"message": "Face not recognized. Please try again."})
     
 @app.route('/start_counting', methods=['POST'])
 def start_counting():
-    global start_counting_flag
+    global start_counting_flag, set_completed_announced, situp_count, voice_position_announced
+    set_completed_announced = False
+    situp_count = 0
     start_counting_flag = True
+    voice_position_announced = False  # Reset flag để đảm bảo lời nhắc được phát
+    async_speak("Please lie down and show your full body.")
     return jsonify({"message": "Workout started."})
 
 @app.route('/continue_set', methods=['POST'])
@@ -291,7 +321,7 @@ def continue_set():
     display_state = "Waiting..."
     pose_instruction = ""
     cooldown_message = ""
-    start_counting_flag = True  # Start counting immediately after continue
+    start_counting_flag = True
     return jsonify({"message": "New set started. Ready to workout!"})
 
 @app.route('/change_user', methods=['POST'])
@@ -363,7 +393,7 @@ def resume():
 
 @app.route('/logout', methods=['POST'])
 def logout():
-    global current_user_id, current_user_name, confirmed_user_name, start_counting_flag, situp_count, recognized_face, cooldown_started, ready_to_count, pose_instruction, cooldown_message
+    global current_user_id, current_user_name, confirmed_user_name, start_counting_flag, situp_count, recognized_face, cooldown_started, ready_to_count, pose_instruction, cooldown_message, set_completed_announced
     current_user_id = None
     current_user_name = "Unknown"
     confirmed_user_name = None
@@ -374,6 +404,7 @@ def logout():
     ready_to_count = False
     pose_instruction = ""
     cooldown_message = ""
+    set_completed_announced = False  # Reset set completed flag
     return jsonify({"message": "Logged out."})
 
 @app.route('/user_history')
