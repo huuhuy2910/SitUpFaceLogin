@@ -6,7 +6,15 @@
 Tài liệu này hướng dẫn chi tiết cách **cài đặt** và **chạy** hệ thống.  
 
 ---
+💡 **Công nghệ sử dụng:**  
+- **Face Recognition**: Nhận diện khuôn mặt  
+- **OpenCV**: Xử lý hình ảnh và video  
+- **MediaPipe/OpenPose**: Trích xuất keypoints  
+- **LSTM (Long Short-Term Memory)**: Nhận diện động tác gập bụng  
+- **Flask**: API backend  
+- **MySQL**: Lưu trữ dữ liệu  
 
+---
 ## **Yêu cầu hệ thống**  
 - **Python** 3.7 trở lên  
 - **MySQL Server**  
@@ -203,16 +211,6 @@ http://localhost:5000
 3️⃣ **Lưu kết quả vào MySQL**  
    - Lưu thông tin người tập, số lần gập bụng, thời gian tập luyện  
    - Hiển thị lịch sử tập luyện khi cần  
-
----
-
-💡 **Công nghệ sử dụng:**  
-- **Face Recognition**: Nhận diện khuôn mặt  
-- **OpenCV**: Xử lý hình ảnh và video  
-- **MediaPipe/OpenPose**: Trích xuất keypoints  
-- **LSTM (Long Short-Term Memory)**: Nhận diện động tác gập bụng  
-- **Flask**: API backend  
-- **MySQL**: Lưu trữ dữ liệu  
 
 ---
 
