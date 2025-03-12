@@ -7,11 +7,15 @@ import mediapipe as mp
 import collections
 import threading
 import time
-import winsound  # For beep sound
-import pyttsx3   # Thư viện chuyển văn bản thành giọng nói
+import winsound 
+import pyttsx3  
 from flask import Flask, render_template, Response, jsonify, request
 import mysql.connector
 from mysql.connector import Error
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__)
 DB_CONFIG = {
@@ -33,7 +37,10 @@ def speak(text):
 
 def async_speak(text):
     """Gọi hàm speak() trong một luồng riêng để không chặn các hoạt động khác."""
-    threading.Thread(target=speak, args=(text,), daemon=True).start()
+    try:
+        threading.Thread(target=speak, args=(text,), daemon=True).start()
+    except Exception as e:
+        logging.error("Exception in async_speak", exc_info=True)
 
 # --------------------------
 # Face Recognition Setup
@@ -147,19 +154,22 @@ def countdown_timer():
     Cập nhật global cooldown_message.
     """
     global ready_to_count, cooldown_start_time, cooldown_message
-    while True:
-        elapsed = time.time() - cooldown_start_time
-        remaining = int(cooldown_duration - elapsed)
-        cooldown_message = f"Cooldown: {remaining}s"
-        print(cooldown_message)
-        if remaining <= 0:
+    try:
+        while True:
+            elapsed = time.time() - cooldown_start_time
+            remaining = int(cooldown_duration - elapsed)
+            cooldown_message = f"Cooldown: {remaining}s"
+            print(cooldown_message)
+            if remaining <= 0:
+                winsound.Beep(1000, 500)
+                ready_to_count = True
+                cooldown_message = "Cooldown Done"
+                async_speak("Start counting!")
+                break
             winsound.Beep(1000, 500)
-            ready_to_count = True
-            cooldown_message = "Cooldown Done"
-            async_speak("Start counting!")
-            break
-        winsound.Beep(1000, 500)
-        time.sleep(1)
+            time.sleep(1)
+    except Exception as e:
+        logging.error("Exception in countdown_timer", exc_info=True)
 
 def recognize_face(frame):
     """
@@ -213,7 +223,7 @@ def recognize_face(frame):
 def gen_frames():
     """
     Đọc frame từ webcam.
-    Nếu chưa xác nhận người dùng, thực hiện nhận diện khuôn mặt.
+    Nếu chưa xác nhận người dùng, thực hiện nhận diện khuôn mặt mỗi 30 frame.
     Sau khi nhấn Confirm & Start, nếu nhận diện được toàn bộ cơ thể
     (check_full_body và is_body_horizontal) thì:
       - Nếu cơ thể chưa đúng vị trí, phát lời nhắc "Please lie down and show your full body." mỗi 5 giây.
@@ -233,8 +243,12 @@ def gen_frames():
             print("Error: Could not read frame")
             break
         frame = cv2.flip(frame, 1)
-        if not start_counting_flag and frame_count % 30 == 0:
-            recognize_face(frame)
+        if not start_counting_flag:
+            if frame_count % 30 == 0:
+                recognize_face(frame)
+            if recognized_face is not None:
+                top, right, bottom, left = recognized_face["box"]
+                cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
         if start_counting_flag:
             landmarks, keypoints = extract_keypoints(frame)
             if keypoints is not None:
@@ -432,4 +446,7 @@ def user_history():
             connection.close()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    try:
+        app.run(debug=True)
+    except Exception as e:
+        logging.error("Exception in main", exc_info=True)
