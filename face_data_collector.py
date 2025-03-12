@@ -2,8 +2,16 @@ import cv2
 import os
 import sys
 from flask import Flask, request, jsonify
+import mysql.connector
+from mysql.connector import Error
 
 app = Flask(__name__)
+DB_CONFIG = {
+    "host": "localhost",
+    "user": "root",
+    "password": "1234",
+    "database": "fitness_tracking"
+}
 
 def collect_face_data(name):
     data_dir = "face_data"
@@ -49,6 +57,24 @@ def collect_face_data(name):
     cap.release()
     cv2.destroyAllWindows()
     print(f"Đã thu thập xong {count} ảnh cho {name}")
+
+    # Insert log entry into face_recognition_logs table
+    try:
+        connection = mysql.connector.connect(**DB_CONFIG)
+        cursor = connection.cursor()
+        cursor.execute("SELECT id FROM users WHERE name = %s", (name,))
+        user = cursor.fetchone()
+        if user:
+            user_id = user[0]
+            cursor.execute("INSERT INTO face_recognition_logs (user_id) VALUES (%s)", (user_id,))
+            connection.commit()
+            print(f"Log entry created for user {name}")
+    except Error as e:
+        print(f"Error: {e}")
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
 
 @app.route('/collect_face_data', methods=['POST'])
 def collect_face_data_route():
