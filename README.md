@@ -43,20 +43,31 @@ Kết nối đến cơ sở dữ liệu **fitness_tracking** và tạo các bả
 ```sql
 USE fitness_tracking;
 
-CREATE TABLE users (
+-- Bảng lưu thông tin người dùng nhận diện khuôn mặt
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    encoding BLOB NOT NULL
+    name VARCHAR(100) NOT NULL,
+    encoding BLOB NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE situp_sessions (
+-- Bảng lưu lịch sử nhận diện khuôn mặt
+CREATE TABLE IF NOT EXISTS face_recognition_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
-    situp_count INT,
-    result VARCHAR(10),
-    session_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    recognized_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
+-- Bảng lưu lịch sử bài tập gập bụng
+CREATE TABLE IF NOT EXISTS situp_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    situp_count INT NOT NULL,
+    result TINYINT(1) NOT NULL,  -- 1 means "passed", 0 means "not passed"
+    session_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
 ```
 
 #### **2.4. Cấu hình kết nối MySQL trong `app.py`**  
