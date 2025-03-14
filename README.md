@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS situp_sessions (
 ```
 
 #### **2.4. Cấu hình kết nối MySQL trong `app.py`**  
-Mở file **`app.py`** và cập nhật thông tin kết nối MySQL:  
+Mở file **`app.py, face_data_collector.py`** và cập nhật thông tin kết nối MySQL:  
 ```python
 DB_CONFIG = {
     "host": "localhost",
