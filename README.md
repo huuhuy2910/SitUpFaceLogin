@@ -1,9 +1,18 @@
 # **Ứng dụng xác thực khuôn mặt và LSTM trong nhận diện & đếm động tác gập bụng từ video - SitUpFaceLogin**  
 
+### **Thông tin nhóm**  
+- **Tên sinh viên:** Nguyễn Hữu Huy  
+- **Nhóm:** Nhóm 10
+- **Lớp:** CNTT 16-01
+- **Môn**: THỰC TẬP CNTT 5: TRIỂN KHAI ỨNG DỤNG AI, IOT
+
+---
+
 ## **Giới thiệu**  
 **SitUpFaceLogin** là một dự án sử dụng **nhận diện khuôn mặt** và **nhận diện tư thế** để **đếm số lần gập bụng**. Hệ thống sẽ xác thực người dùng bằng khuôn mặt trước khi theo dõi số lần tập luyện và lưu trữ kết quả vào **MySQL**.  
 
 Tài liệu này hướng dẫn chi tiết cách **cài đặt** và **chạy** hệ thống.  
+
 
 ---
 💡 **Công nghệ sử dụng:**  
