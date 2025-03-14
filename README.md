@@ -105,10 +105,7 @@ curl -X POST http://localhost:5000/collect_face_data -H "Content-Type: applicati
 ---
 
 ### **4. Huấn luyện mô hình nhận diện khuôn mặt**  
-Sau khi thu thập ảnh khuôn mặt, chạy script **`train_model_face.py`** để huấn luyện mô hình nhận diện:  
-```sh
-python train_model_face.py
-```
+Sau khi thu thập ảnh khuôn mặt, chạy notebook **`train_face.ibynb`** để huấn luyện mô hình nhận diện:  
 🔹 Mô hình sau khi huấn luyện sẽ được lưu vào **`face_model.pkl`**.  
 
 ---
