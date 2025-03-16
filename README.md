@@ -222,6 +222,7 @@ http://localhost:5000
    - Hiển thị lịch sử tập luyện khi cần  
 
 ---
-##**Poster**
+## **Poster**
+![Poster_Nhom10](https://github.com/user-attachments/assets/5d03963d-0ab2-458f-8b09-0d8bb33275f1)
 
 **🔥 Chúc bạn triển khai thành công dự án SitUpFaceLogin! 🔥** 🚀
