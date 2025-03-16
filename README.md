@@ -16,7 +16,6 @@
     <img src="https://img.shields.io/badge/DaiNam%20University-red?style=for-the-badge" alt="DaiNam University"/>
   </a>
 </p>
----
 
 ### **Thông tin nhóm**  
 - **Tên sinh viên:** Nguyễn Hữu Huy
