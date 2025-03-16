@@ -17,19 +17,17 @@
   </a>
 </p>
 
+## **Giới thiệu**  
+**SitUpFaceLogin** là một dự án sử dụng **nhận diện khuôn mặt** và **nhận diện tư thế** để **đếm số lần gập bụng**. Hệ thống sẽ xác thực người dùng bằng khuôn mặt trước khi theo dõi số lần tập luyện và lưu trữ kết quả vào **MySQL** được hướng dẫn và góp ý bởi 2 giảng viên **LÊ TRUNG HIẾU** và **NGUYỄN VĂN NHÂN** thuộc *KHOA CÔNG NGHỆ THÔNG TIN* - **ĐẠI HỌC ĐẠI NAM "Dainam University"**.  
 
+Tài liệu này hướng dẫn chi tiết cách **cài đặt** và **chạy** hệ thống.  
+## **Thành viên tham gia**
 | STT | Tên sinh viên         | Mã sinh viên    | Nhóm  | Lớp        |  
 |-----|----------------------|---------------|-------|-----------|  
 | 1   | Nguyễn Hữu Huy       | 1671020139    | 10    | CNTT 16-01 |  
 | 2   | Đặng Lê Hoàng Anh    | 1671020***    | 10    | CNTT 16-01 |  
 | 3   | Nguyễn Văn Nguyên    | 1671020***    | 10    | CNTT 16-01 |  
 
-Bạn điền thông tin hai thành viên còn lại vào nhé!
-
-## **Giới thiệu**  
-**SitUpFaceLogin** là một dự án sử dụng **nhận diện khuôn mặt** và **nhận diện tư thế** để **đếm số lần gập bụng**. Hệ thống sẽ xác thực người dùng bằng khuôn mặt trước khi theo dõi số lần tập luyện và lưu trữ kết quả vào **MySQL**.  
-
-Tài liệu này hướng dẫn chi tiết cách **cài đặt** và **chạy** hệ thống.  
 
 ## **Mô hình hoạt động**
 ![image](https://github.com/user-attachments/assets/5ff27214-e647-402d-8008-d2fa27e15780)
