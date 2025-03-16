@@ -2,7 +2,7 @@
 ---
 
 <p align="center">
-  <img src="images/logo.png" alt="DaiNam University Logo" width="200"/>
+  <img src="image/logo.png" alt="DaiNam University Logo" width="200"/>
   <img src="image/AIoTLab_logo.png" alt="AIoTLab Logo" width="170"/>
 </p>
 <p align="center">
