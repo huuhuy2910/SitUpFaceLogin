@@ -1,5 +1,11 @@
 # **Ứng dụng AI trong xác thực khuôn mặt và LSTM trong nhận diện & đếm động tác gập bụng từ video - SitUpFaceLogin**  
-
+---
+![image](https://github.com/user-attachments/assets/9cd4c223-5db7-4037-b12a-5df66b7c75e4)
+![image](https://github.com/user-attachments/assets/a2c494e9-dc08-4a68-b744-6b3ea0f6f595)
+[![Made by AIoTLab](https://img.shields.io/badge/Made%20by%20AIoTLab-blue?style=for-the-badge)](https://www.facebook.com/DNUAIoTLab)
+[![Fit DNU](https://img.shields.io/badge/Fit%20DNU-green?style=for-the-badge)](https://fitdnu.net/)
+[![DaiNam University](https://img.shields.io/badge/DaiNam%20University-red?style=for-the-badge)](https://dainam.edu.vn)
+---
 ### **Thông tin nhóm**  
 - **Tên sinh viên:** Nguyễn Hữu Huy
 - **Mã sinh viên:** 1671020139  
