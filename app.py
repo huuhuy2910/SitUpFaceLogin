@@ -53,7 +53,7 @@ known_face_names = data["names"]              # Corresponding names
 # --------------------------
 # Sit-up LSTM Model & Pose Setup
 # --------------------------
-model = tf.keras.models.load_model("Model_situp_lstm.h5")
+model = tf.keras.models.load_model("train_model_situp/Model_situp_lstm.h5")
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 mp_drawing = mp.solutions.drawing_utils
