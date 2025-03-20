@@ -8,7 +8,7 @@ mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 
 # Thư mục chứa video đầu vào
-video_folder = "data/train/"
+video_folder = "data/"
 output_folder_situp = "frame/1/"  # Gập bụng lên
 output_folder_sitdown = "frame/0/"  # Hạ xuống
 
