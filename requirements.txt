@@ -10,3 +10,7 @@ logging
 seaborn
 matplotlib
 scikit-learn
+threading
+pickle
+collections
+winsound 
