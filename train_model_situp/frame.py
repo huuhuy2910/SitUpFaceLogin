@@ -35,7 +35,7 @@ def classify_situp(keypoints):
     """
     Xác định tư thế sit-up dựa trên vị trí keypoints.
     - Khi gập lên (1): Góc giữa vai - hông - đầu gối nhỏ hơn 90 độ.
-    - Khi hạ xuống (0): Góc giữa vai - hông - đầu gối lớn hơn 140 độ.
+    - Khi hạ xuống (0): Góc giữa vai - hông - đầu gối lớn hơn 110 độ.
     """
     if keypoints is None:
         return None
