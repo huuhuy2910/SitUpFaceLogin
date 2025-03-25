@@ -30,7 +30,7 @@
 Tài liệu này hướng dẫn chi tiết cách **cài đặt** và **chạy** hệ thống.  
 
 ## **Mô hình hoạt động**
-![image](https://github.com/user-attachments/assets/5ff27214-e647-402d-8008-d2fa27e15780)
+![image](https://github.com/user-attachments/assets/e06350ea-eddb-454e-8cb6-e2e6ce9e7914)
 
 ---
 💡 **Công nghệ sử dụng:**  
