@@ -1,4 +1,4 @@
-# **Ứng dụng AI trong xác thực khuôn mặt và LSTM trong nhận diện & đếm động tác gập bụng từ video - SitUpFaceLogin**  
+![Poster_Nhom10 (1)](https://github.com/user-attachments/assets/2afde46c-341c-42c4-9b48-586a16e7e288)![Poster_Nhom10 (1)](https://github.com/user-attachments/assets/b1dd76a9-4baa-4343-854b-45e4234c40e6)# **Ứng dụng AI trong xác thực khuôn mặt và LSTM trong nhận diện & đếm động tác gập bụng từ video - SitUpFaceLogin**  
 ---
 
 <p align="center">
@@ -30,7 +30,8 @@
 Tài liệu này hướng dẫn chi tiết cách **cài đặt** và **chạy** hệ thống.  
 
 ## **Mô hình hoạt động**
-![image](https://github.com/user-attachments/assets/e06350ea-eddb-454e-8cb6-e2e6ce9e7914)
+![image](https://github.com/user-attachments/assets/61f735ca-4ea6-4e32-a3ef-346cdad7e124)
+
 
 ---
 💡 **Công nghệ sử dụng:**  
@@ -237,6 +238,7 @@ http://localhost:5000
 
 ---
 ## **Poster**
-![Poster_Nhom10](https://github.com/user-attachments/assets/5d03963d-0ab2-458f-8b09-0d8bb33275f1)
+![Poster_Nhom10 (1)](https://github.com/user-attachments/assets/ec1dc5ef-1b88-4302-a4ff-126c365daf76)
+
 
 **🔥 Chúc bạn triển khai thành công dự án SitUpFaceLogin! 🔥** 🚀
