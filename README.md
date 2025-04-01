@@ -1,4 +1,4 @@
-![Poster_Nhom10 (1)](https://github.com/user-attachments/assets/2afde46c-341c-42c4-9b48-586a16e7e288)![Poster_Nhom10 (1)](https://github.com/user-attachments/assets/b1dd76a9-4baa-4343-854b-45e4234c40e6)# **Ứng dụng AI trong xác thực khuôn mặt và LSTM trong nhận diện & đếm động tác gập bụng từ video - SitUpFaceLogin**  
+![Poster_Nhom10 (1)](https://github.com/user-attachments/assets/2afde46c-341c-42c4-9b48-586a16e7e288)![Poster_Nhom10 (1)](https://github.com/user-attachments/assets/b1dd76a9-4baa-4343-854b-45e4234c40e6)# #**Ứng dụng AI trong xác thực khuôn mặt và LSTM trong nhận diện & đếm động tác gập bụng từ video - SitUpFaceLogin**  
 ---
 
 <p align="center">
