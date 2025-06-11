@@ -1,322 +1,347 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sit-Up Recognition</title>
-    <!-- Font Awesome for icons -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-      integrity="sha512-..."
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
-    <!-- Bootstrap CSS -->
-    <link
-      rel="stylesheet"
-      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-      integrity="sha384-..."
-      crossorigin="anonymous"
-    />
-    <style>
-      /* Dark minimalistic theme */
-      body {
-        font-family: 'Arial', sans-serif;
-        background-color: #111;
-        color: #eee;
-        margin: 0;
-        padding: 20px;
-      }
-      .container-custom {
-        background: #222;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 20px rgba(255,255,255,0.1);
-      }
-      .camera {
-        background-color: #000;
-        border-radius: 10px;
-        overflow: hidden;
-        margin-bottom: 20px;
-      }
-      .camera img {
-        width: 100%;
-      }
-      .header {
-        text-align: center;
-        margin-bottom: 20px;
-      }
-      .header i {
-        font-size: 40px;
-        color: #007bff;
-      }
-      .header h1 {
-        font-size: 36px;
-        margin: 10px 0;
-        letter-spacing: 3px;
-      }
-      .info p {
-        margin: 5px 0;
-      }
-      /* Hide workout info until workout starts */
-      #workout-info {
-        display: none;
-      }
-      .buttons button {
-        margin-bottom: 10px;
-      }
-      .notification {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background-color: #007bff;
-        color: #fff;
-        padding: 15px 25px;
-        border-radius: 5px;
-        font-size: 1.5rem;
-        display: none;
-      }
-      /* Modal styles for History */
-      .modal-content {
-        background-color: #222;
-        color: #eee;
-      }
-      .close {
-        float: right;
-        font-size: 28px;
-        cursor: pointer;
-      }
-      .history-section {
-        margin-top: 20px;
-      }
-    </style>
-    <script>
-      let faceRecognitionInterval;
-      function showNotification(message) {
-        const notif = document.getElementById("notification");
-        notif.innerText = message;
-        notif.style.display = "block";
-        setTimeout(() => { notif.style.display = "none"; }, 3000);
-      }
-      function updateStatus() {
-        fetch("/status")
-          .then(res => res.json())
-          .then(data => {
-            // Update User with icon
-            document.getElementById("user").innerHTML = '<i class="fas fa-user"></i> User: ' + data.user;
-            // Update Status with text only (no icon)
-            document.getElementById("status").innerText = "Status: " + data.status;
-            if (document.getElementById("workout-info").style.display !== "none") {
-              document.getElementById("situp_count").innerHTML = '<i class="fas fa-dumbbell"></i> Sit-ups: ' + data.situp_count;
-              document.getElementById("result").innerHTML = '<i class="fas fa-times-circle"></i> Result: ' + data.result;
-              document.getElementById("pose").innerHTML = '<i class="fas fa-hourglass"></i> Pose: ' + data.pose;
-              document.getElementById("instruction").innerHTML = '<i class="fas fa-info-circle"></i> Instruction: ' + data.instruction;
-              document.getElementById("cooldown").innerHTML = '<i class="fas fa-clock"></i> Cooldown: ' + data.cooldown;
-              if (data.situp_count >= 12) {
-                document.getElementById("continue-button").style.display = "block";
-              }
-            }
-          });
-      }
-      setInterval(updateStatus, 1000);
-      
-      function confirmUser() {
-        fetch("/confirm", { method: "POST" })
-          .then(res => res.json())
-          .then(data => {
-            showNotification(data.message);
-            document.getElementById("confirm-button").style.display = "none";
-            document.getElementById("start-button").style.display = "block";
-            clearInterval(faceRecognitionInterval);
-          });
-      }
-      
-      function startWorkout() {
-        fetch("/start_counting", { method: "POST" })
-          .then(res => res.json())
-          .then(data => {
-            showNotification(data.message);
-            document.getElementById("start-button").style.display = "none";
-            document.getElementById("workout-info").style.display = "block";
-            document.getElementById("other-buttons").style.display = "block";
-            document.getElementById("continue-button").style.display = "none";  // Hide continue button at start
-          });
-      }
-      
-      function continueSet() {
-        fetch("/continue_set", { method: "POST" })
-          .then(res => res.json())
-          .then(data => {
-            showNotification(data.message);
-            document.getElementById("continue-button").style.display = "none";  // Hide continue button after clicking
-          });
-      }
-      
-      function pauseCounting() {
-        fetch("/pause", { method: "POST" })
-          .then(res => res.json())
-          .then(data => showNotification(data.message));
-      }
-      function resumeCounting() {
-        fetch("/resume", { method: "POST" })
-          .then(res => res.json())
-          .then(data => showNotification(data.message));
-      }
-      function logoutUser() {
-        fetch("/logout", { method: "POST" })
-          .then(res => res.json())
-          .then(data => {
-            showNotification(data.message);
-            document.getElementById("user").innerHTML = '<i class="fas fa-user"></i> User: Unknown';
-            document.getElementById("status").innerText = "Status: Waiting for Confirmation";
-            document.getElementById("workout-info").style.display = "none";
-            document.getElementById("other-buttons").style.display = "none";
-            document.getElementById("confirm-button").style.display = "block";
-            document.getElementById("continue-button").style.display = "none";  // Hide continue button on logout
-            $("#history-modal").modal("hide");
-          });
-      }
-      function saveData() {
-        fetch("/save", { method: "POST" })
-          .then(res => res.json())
-          .then(data => {
-            showNotification(data.message);
-            setTimeout(() => { showHistory(); }, 500);
-          });
-      }
-      function showHistory() {
-        if (document.getElementById("user").innerText.indexOf("Unknown") !== -1) {
-          showNotification("Please confirm user first.");
-          return;
-        }
-        fetch("/user_history")
-          .then(res => res.json())
-          .then(data => {
-            if (data.user_name === "No Confirmed User") {
-              showNotification("No history available for unconfirmed user.");
-              return;
-            }
-            let content = `<h2 class="mb-3"><i class="fas fa-history"></i> ${data.user_name}'s Sit-Up History</h2>
-              <table class="table table-dark">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Sit-ups</th>
-                    <th>Result</th>
-                  </tr>
-                </thead>
-                <tbody>`;
-            data.history.forEach(entry => {
-              content += `<tr>
-                <td>${entry.session_time}</td>
-                <td>${entry.situp_count}</td>
-                <td>${entry.result == 1 ? "Pass" : "Fail"}</td>
-              </tr>`;
-            });
-            content += `</tbody></table>`;
-            document.getElementById("user-history-content").innerHTML = content;
-            $("#history-modal").modal("show");
-          });
-      }
-      function startFaceRecognition() {
-        faceRecognitionInterval = setInterval(() => {
-          fetch("/recognize_face")
-            .then(res => res.json())
-            .then(data => {
-              document.getElementById("user").innerHTML = '<i class="fas fa-user"></i> User: ' + data.user;
-            });
-        }, 2000);
-      }
-      window.onload = startFaceRecognition;
-    </script>
-  </head>
-  <body>
-    <div class="container container-custom">
-      <div class="row">
-        <!-- Camera Column -->
-        <div class="col-md-8">
-          <div class="camera">
-            <img src="{{ url_for('video_feed') }}" alt="Camera Feed" />
-          </div>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sit-Up Recognition</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" crossorigin="anonymous" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous" />
+  <!-- Animate.css -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" crossorigin="anonymous" />
+  <!-- Poppins Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #121212;
+      --bg-light: #f5f5f5;
+      --fg-dark: #eee;
+      --fg-light: #333;
+      --btn-grad-dark: linear-gradient(45deg,#1dd1a1,#10ac84);
+      --btn-grad-dark-h: linear-gradient(45deg,#10ac84,#0a5742);
+      --btn-grad-light: linear-gradient(45deg,#74b9ff,#0984e3);
+      --btn-grad-light-h: linear-gradient(45deg,#0984e3,#065aab);
+      --skeleton-dark: #333;
+      --skeleton-light: #ddd;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      margin: 0;
+      padding: 20px;
+      transition: background 0.3s, color 0.3s;
+    }
+    [data-theme="dark"] {
+      --bg: var(--bg-dark);
+      --fg: var(--fg-dark);
+      --btn-grad: var(--btn-grad-dark);
+      --btn-grad-h: var(--btn-grad-dark-h);
+      --skeleton-bg: var(--skeleton-dark);
+    }
+    [data-theme="light"] {
+      --bg: var(--bg-light);
+      --fg: var(--fg-light);
+      --btn-grad: var(--btn-grad-light);
+      --btn-grad-h: var(--btn-grad-light-h);
+      --skeleton-bg: var(--skeleton-light);
+    }
+    .container-custom {
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(5px);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .camera {
+      position: relative;
+      overflow: hidden;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+    .camera img {
+      width: 100%;
+      display: none;
+    }
+    .skeleton {
+      width: 100%;
+      height: 300px;
+      background: var(--skeleton-bg);
+      border-radius: 15px;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .header i {
+      font-size: 50px;
+      color: #17c0eb;
+      animation: pulse 2s infinite;
+    }
+    .header h1 {
+      font-size: 2.5rem;
+      letter-spacing: 3px;
+      margin: 10px 0;
+    }
+    #workout-info p, #workout-info .progress {
+      font-size: 1.1rem;
+      margin: 10px 0;
+    }
+    .btn-gradient {
+      background: var(--btn-grad);
+      border: none;
+      color: #fff;
+      padding: 10px 20px;
+      font-weight: 600;
+      border-radius: 10px;
+      width: 100%;
+      margin-bottom: 12px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .btn-gradient:hover {
+      background: var(--btn-grad-h);
+      transform: translateY(-2px);
+    }
+    .btn-gradient:active::after {
+      content: "";
+      position: absolute;
+      width: 100%; height: 100%;
+      background: rgba(255,255,255,0.3);
+      top: 0; left: 0;
+      animation: ripple .6s ease-out;
+    }
+    @keyframes ripple {
+      from { opacity: .7; }
+      to { opacity: 0; transform: scale(1.5); }
+    }
+    .progress {
+      height: 20px;
+      border-radius: 10px;
+      background: #444;
+    }
+    .progress-bar {
+      background: #1dd1a1;
+      transition: width 0.3s;
+    }
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #1dd1a1;
+      color: #fff;
+      padding: 15px 25px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 1.2rem;
+      z-index: 9999;
+      display: none;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+    .modal-content {
+      background-color: #1e272e;
+      color: #f5f6fa;
+      border-radius: 15px;
+    }
+    /* History Table Enhancements */
+    .table-history {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 10px;
+      overflow: hidden;
+    }
+    .table-history thead th {
+      background: #2f3640;
+      border: none;
+      color: #f5f6fa;
+      padding: 12px;
+    }
+    .table-history tbody tr {
+      background: rgba(29,209,161,0.1);
+      transition: transform 0.3s, background 0.3s;
+    }
+    .table-history tbody tr:hover {
+      background: rgba(29,209,161,0.3);
+      transform: translateX(10px);
+    }
+    .table-history td {
+      border: none;
+      padding: 12px;
+      color: #f5f6fa;
+    }
+    .mode-toggle {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+    .switch input { display: none; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+  </style>
+</head>
+<body>
+  <div class="mode-toggle">
+    <label class="switch">
+      <input type="checkbox" onchange="toggleMode(this)">
+      <span class="slider round"></span>
+    </label>
+  </div>
+
+  <div class="container container-custom">
+    <div class="row">
+      <div class="col-md-8">
+        <div class="camera">
+          <div class="skeleton" id="camera-skel"></div>
+          <img id="camera-feed" src="{{ url_for('video_feed') }}" alt="Camera Feed" />
         </div>
-        <!-- Info Column -->
-        <div class="col-md-4">
-          <div class="header">
-            <i class="fas fa-dumbbell"></i>
-            <h1>Sit-Up Recognition</h1>
+      </div>
+      <div class="col-md-4">
+        <div class="header animate__animated animate__fadeInDown">
+          <i class="fas fa-dumbbell animate__animated animate__bounce"></i>
+          <h1>Sit-Up Recognition</h1>
+        </div>
+        <p id="user"><i class="fas fa-user"></i> User: Unknown</p>
+        <p id="status">Status: Waiting for Confirmation</p>
+
+        <div id="workout-info" style="display: none;">
+          <div class="progress">
+            <div class="progress-bar" id="situp-progress" role="progressbar" style="width: 0%;">0%</div>
           </div>
-          <p id="user"><i class="fas fa-user"></i> User: Unknown</p>
-          <p id="status">Status: Waiting for Confirmation</p>
-          <!-- Workout info shown only after Start Workout -->
-          <div id="workout-info">
-            <p id="situp_count"><i class="fas fa-dumbbell"></i> Sit-ups: 0</p>
-            <p id="result"><i class="fas fa-times-circle"></i> Result: Fail</p>
-            <p id="pose"><i class="fas fa-hourglass"></i> Pose: Waiting...</p>
-            <p id="instruction"><i class="fas fa-info-circle"></i> Instruction: Please show full body and lie horizontally</p>
-            <p id="cooldown"><i class="fas fa-clock"></i> Cooldown:</p>
-          </div>
-          <div class="buttons">
-            <button id="confirm-button" class="btn btn-primary btn-block" onclick="confirmUser()">
-              <i class="fas fa-user-check"></i> Confirm User
+          <p id="situp_count"><i class="fas fa-dumbbell"></i> Sit-ups: 0</p>
+          <p id="result"><i class="fas fa-times-circle"></i> Result: Fail</p>
+          <p id="pose"><i class="fas fa-hourglass"></i> Pose: Waiting...</p>
+          <p id="instruction"><i class="fas fa-info-circle"></i> Instruction: Please show full body and lie horizontally</p>
+          <p id="cooldown"><i class="fas fa-clock"></i> Cooldown:</p>
+        </div>
+
+        <div class="buttons">
+          <button id="confirm-button" class="btn-gradient" onclick="confirmUser()">
+            <i class="fas fa-user-check"></i> Confirm User
+          </button>
+          <button id="start-button" class="btn-gradient" onclick="startWorkout()" style="display: none;">
+            <i class="fas fa-play"></i> Start Workout
+          </button>
+          <button id="continue-button" class="btn-gradient" onclick="continueSet()" style="display: none;">
+            <i class="fas fa-redo"></i> Continue Set
+          </button>
+          <div id="other-buttons" style="display: none;">
+            <button class="btn-gradient" onclick="saveData()">
+              <i class="fas fa-save"></i> Save Result
             </button>
-            <button id="start-button" class="btn btn-success btn-block" onclick="startWorkout()" style="display: none;">
-              <i class="fas fa-play"></i> Start Workout
+            <button class="btn-gradient" onclick="logoutUser()">
+              <i class="fas fa-sign-out-alt"></i> Logout
             </button>
-            <button id="continue-button" class="btn btn-warning btn-block" onclick="continueSet()" style="display: none;">
-              <i class="fas fa-redo"></i> Continue Set
+            <button id="pause-resume-button" class="btn-gradient" onclick="togglePauseResume()">
+              <i class="fas fa-pause"></i> Pause
             </button>
-            <div id="other-buttons" style="display: none;">
-              <button class="btn btn-info btn-block" onclick="saveData()">
-                <i class="fas fa-save"></i> Save Result
-              </button>
-              <button class="btn btn-danger btn-block" onclick="logoutUser()">
-                <i class="fas fa-sign-out-alt"></i> Logout
-              </button>
-              <button id="pause-resume-button" class="btn btn-secondary btn-block" onclick="togglePauseResume()">
-                <i class="fas fa-pause"></i> Pause
-              </button>
-              <button class="btn btn-dark btn-block" onclick="showHistory()">
-                <i class="fas fa-history"></i> View History
-              </button>
-            </div>
+            <button class="btn-gradient" onclick="showHistory()">
+              <i class="fas fa-history"></i> View History
+            </button>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- History Modal -->
-    <div id="history-modal" class="modal fade" tabindex="-1" role="dialog">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title"><i class="fas fa-history"></i> User History</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModal()">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body" id="user-history-content"></div>
+  <div id="notification" class="notification"></div>
+
+  <div id="history-modal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content animate__animated animate__fadeInUp">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-history"></i> Workout History</h5>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" onclick="closeModal()">
+            <span aria-hidden="true">&times;</span>
+          </button>
         </div>
+        <div class="modal-body animate__animated animate__fadeInUp" id="user-history-content"></div>
       </div>
     </div>
+  </div>
 
-    <div id="notification" class="notification"></div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
-    <script>
-      function togglePauseResume() {
-        const button = document.getElementById("pause-resume-button");
-        if (button.innerText.includes("Pause")) {
-          pauseCounting();
-          button.innerHTML = '<i class="fas fa-play"></i> Resume';
-        } else {
-          resumeCounting();
-          button.innerHTML = '<i class="fas fa-pause"></i> Pause';
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" crossorigin="anonymous"></script>
+  <script>
+    let faceRecognitionInterval;
+    function toggleMode(cb) { document.documentElement.setAttribute('data-theme', cb.checked ? 'light' : 'dark'); }
+    function showNotification(message) {
+      const n = document.getElementById("notification");
+      n.innerText = message; n.style.display = "block";
+      setTimeout(() => n.style.display = "none", 3000);
+    }
+    function showCamera() { document.getElementById('camera-skel').style.display = 'none'; document.getElementById('camera-feed').style.display = 'block'; }
+    function updateStatus() {
+      fetch("/status").then(r=>r.json()).then(d=>{
+        document.getElementById("user").innerHTML = '<i class="fas fa-user"></i> User: '+d.user;
+        document.getElementById("status").innerText = "Status: " + d.status;
+        if(document.getElementById("workout-info").style.display!="none"){
+          document.getElementById("situp_count").innerHTML='<i class="fas fa-dumbbell"></i> Sit-ups: '+d.situp_count;
+          document.getElementById("result").innerHTML='<i class="fas fa-times-circle"></i> Result: '+d.result;
+          document.getElementById("pose").innerHTML='<i class="fas fa-hourglass"></i> Pose: '+d.pose;
+          document.getElementById("instruction").innerHTML='<i class="fas fa-info-circle"></i> Instruction: '+d.instruction;
+          document.getElementById("cooldown").innerHTML='<i class="fas fa-clock"></i> Cooldown: '+d.cooldown;
+          const bar=document.getElementById('situp-progress');
+          const p=Math.min(100,(d.situp_count/30)*100);
+          bar.style.width=p+'%';bar.innerText=Math.round(p)+'%';
+          if(d.situp_count>=12)document.getElementById("continue-button").style.display="block";
         }
-      }
-    </script>
-  </body>
+      });
+    }
+    function confirmUser(){fetch("/confirm",{method:"POST"}).then(r=>r.json()).then(d=>{showNotification(d.message);document.getElementById("confirm-button").style.display="none";document.getElementById("start-button").style.display="block";clearInterval(faceRecognitionInterval);});}
+    function startWorkout(){fetch("/start_counting",{method:"POST"}).then(r=>r.json()).then(d=>{showNotification(d.message);document.getElementById("start-button").style.display="none";document.getElementById("camera-feed").style.display="block";document.getElementById("workout-info").style.display="block";document.getElementById("other-buttons").style.display="block";});}
+    function continueSet(){fetch("/continue_set",{method:"POST"}).then(r=>r.json()).then(d=>{showNotification(d.message);document.getElementById("continue-button").style.display="none";});}
+    function pauseCounting(){fetch("/pause",{method:"POST"}).then(r=>r.json()).then(d=>showNotification(d.message));}
+    function resumeCounting(){fetch("/resume",{method:"POST"}).then(r=>r.json()).then(d=>showNotification(d.message));}
+    function togglePauseResume(){const b=document.getElementById("pause-resume-button");if(b.innerText.includes("Pause")){pauseCounting();b.innerHTML='<i class="fas fa-play"></i> Resume';}else{resumeCounting();b.innerHTML='<i class="fas fa-pause"></i> Pause';}}
+    function logoutUser(){fetch("/logout",{method:"POST"}).then(r=>r.json()).then(d=>{showNotification(d.message);document.getElementById("confirm-button").style.display="block";document.getElementById("workout-info").style.display="none";document.getElementById("other-buttons").style.display="none";setTimeout(()=>location.reload(),1000);});}
+    function saveData(){fetch("/save",{method:"POST"}).then(r=>r.json()).then(d=>{showNotification(d.message);setTimeout(showHistory,500);});}
+    function showHistory(){if(document.getElementById("user").innerText.includes("Unknown")){showNotification("Please confirm user first.");return;}fetch("/user_history").then(r=>r.json()).then(d=>{if(d.user_name==="No Confirmed User"){showNotification("No history available.");return;}let html=`<h2 class="mb-3 animate__animated animate__fadeInUp"><i class="fas fa-history"></i> ${d.user_name}'s Workout History</h2><table class="table-history animate__animated animate__fadeInUp"><thead><tr><th>Date</th><th>Sit-ups</th><th>Result</th></tr></thead><tbody>`;d.history.forEach(e=>html+=`<tr><td>${e.session_time}</td><td>${e.situp_count}</td><td>${e.result==1?"Pass":"Fail"}</td></tr>`);html+=`</tbody></table>`;document.getElementById("user-history-content").innerHTML=html;$('#history-modal').modal('show');});}
+    function startFaceRecognition(){faceRecognitionInterval=setInterval(()=>{fetch("/recognize_face").then(r=>r.json()).then(d=>{document.getElementById("user").innerHTML='<i class="fas fa-user"></i> User: '+d.user;});},2000);}    
+    window.onload=()=>{startFaceRecognition();setInterval(updateStatus,1000);setTimeout(showCamera,1000);};
+  </script>
+</body>
 </html>

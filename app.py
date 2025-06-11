@@ -14,6 +14,7 @@ import mysql.connector
 from mysql.connector import Error
 import logging
 
+speak_lock = threading.Lock()
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -45,7 +46,7 @@ def async_speak(text):
 # --------------------------
 # Face Recognition Setup
 # --------------------------
-with open("face_model.pkl", "rb") as f:
+with open("train_face_recognition/face_model.pkl", "rb") as f:
     data = pickle.load(f)
 known_face_encodings = data["encodings"]      # List of known face encodings
 known_face_names = data["names"]              # Corresponding names
