@@ -24,8 +24,6 @@
 | STT | Tên sinh viên         | Mã sinh viên    | Nhóm  | Lớp        |  
 |-----|----------------------|---------------|-------|-----------|  
 | 1   | Nguyễn Hữu Huy       | 1671020139    | 10    | CNTT 16-01 |  
-| 2   | Đặng Lê Hoàng Anh    | 1671020010    | 10    | CNTT 16-01 |  
-| 3   | Nguyễn Văn Nguyên    | 1671020229    | 10    | CNTT 16-01 |  
 
 Tài liệu này hướng dẫn chi tiết cách **cài đặt** và **chạy** hệ thống.  
 
